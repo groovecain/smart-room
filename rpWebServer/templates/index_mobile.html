@@ -1,0 +1,1201 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>RPi IOT Server</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+        <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="http://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+        <style>
+            body{
+                overflow-y: hidden; /* Hide vertical scrollbar */
+                overflow-x: hidden; /* Hide horizontal scrollbar */
+                font-family: 'Montserrat', sans-serif;
+                color: rgb(209, 205, 199);
+                /* background-color: rgb(24, 26, 27); */
+                background-color: rgb(0, 0, 0);
+            }
+            input::-webkit-outer-spin-button,
+            input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            button{
+                width: 5rem;
+                height: 5rem;
+                font-size: 1rem !important;
+                font-weight: bold !important;
+                color: #ffffff !important;
+                padding-top: 0 !important;
+                background-color: rgba(255, 255, 255, 0.3) !important;
+                border: 0px !important;
+            } 
+            button.icon{
+                font-size: 3rem !important;
+            }
+            button.sm{
+                width: 3rem !important;
+                height: 3rem !important;
+                font-size: 0.8rem !important;
+                font-weight: normal !important;
+                padding: 6px !important;
+            }
+            button.sm i {
+                margin-left: 5px !important;
+            }
+            div.dot{
+                height: 10px;
+                width: 10px;
+                border-radius: 50%;
+                background-color: #ffffff;
+                position: fixed;
+                z-index: 15;
+                margin-left: 0.2rem;
+                margin-top: 0.2rem;
+                right: 3px;
+                
+                bottom: 3px;
+            }
+            span.dot2{
+                height: 10px;
+                width: 10px;
+                border-radius: 50%;
+                background-color: #ffffff;
+                position: fixed;
+                z-index: 15;
+                margin-left: 0.2rem;
+                margin-top: 0.2rem;
+                position: absolute;
+                left: 15px;
+            }
+            span.dot2.off{
+                background-color: red;
+            }
+            span.dot2.on{
+                background-color: green;
+            }
+            span.ac_fan{
+                font-weight: bold;
+                font-size: 3rem;
+            }
+            span.ac_swing{
+                font-weight: bold;
+                font-size: 1.5rem;
+            }
+            .toggle-handle{
+                background: white;
+            }
+            .toggle.ios, .toggle-on.ios, .toggle-off.ios { border-radius: 20px; }
+            .toggle.ios .toggle-handle { border-radius: 20px; }
+            .toggle-off {background-color: gray !important;}
+
+            .remote-group{
+                
+                border-radius: 0.3rem;
+                padding: 1rem;     
+                height: 88.5vh;
+            }
+            div.dot2{
+                height: 10px;
+                width: 10px;
+                border-radius: 50%;
+                background-color: #ffffff;
+            }
+            .particles-js-canvas-el{
+                top: 0;
+                position: absolute;
+                z-index: -1000;
+                opacity: 0.6;
+            }
+            .nav.nav-tabs{
+                bottom: 0;
+                position: fixed;
+
+                /*position: absolute;*/
+                height: 50px;
+                /*top: calc(100vh - 50px);*/
+                z-index: 1000;
+                border-bottom: 0px !important;
+            }
+            .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active{
+                height: 100%;
+                background-color: transparent;
+                color: white;
+            }
+            a{
+                color: #ffffff;
+            }
+            a:focus{
+                color: #ffffff;
+            }
+            .nav-wrapper{
+                display: flex;
+                place-content: center;
+            }
+            #clock{
+                color: white;
+                font-size: 2.5rem;
+                font-weight: 400;
+            }
+            #date{
+                font-size: 1.75rem;
+                font-weight:lighter;
+            }
+            .ac-timer{
+                font-size: 1.4rem;
+            }
+            input.ac-digit, input.lamp1-on-digit, input.lamp1-off-digit, input.lamp2-on-digit, input.lamp2-off-digit{
+                padding: 6px;
+                width: 2rem;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body id="particles-js">
+        <div></div>
+        <script src="{{ url_for('static', filename='particles.min.js') }}"></script>
+        <input type="hidden" id="type" value="{{ type }}">
+        <div class="float-right dot" id="status"></div>
+        <div class="row w-100 ml-0">
+            <div class="col-12 px-0">
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                        <div class="remote-group w-100">
+                            <div class="row">
+                                <div class="col-12 col-sm-6 text-center">
+                                    <div id="clock"></div>
+                                    <div id="date"></div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <a class="weatherwidget-io" href="https://forecast7.com/en/1d13104d05/batam/" data-font="Montserrat" data-label_1="BATAM" data-label_2="WEATHER" data-icons="Climacons Animated" data-theme="dark" data-basecolor="rgba(255, 255, 255, 0)">BATAM WEATHER</a>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+                    <div class="tab-pane fade" id="lamp" role="tabpanel" aria-labelledby="lamp-tab">                  
+                        <div class="remote-group">
+                            <div class="form-group row">
+                                <label for="staticEmail" class="col-3 col-form-label align-self-center"><b>Main Lamp</b></label>
+                                <div class="col-2 align-self-center">
+                                    <input type="checkbox" {{ main_lamp }} data-toggle="toggle" data-size="large" id="main-lamp" data-onstyle="info" data-style="ios">
+                                </div>
+                                <div class="col-2 mx-4 mx-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-toggle="collapse" data-target="#colapseLamp1On" aria-expanded="false" aria-controls="colapseLamp1On">Timer on</button>   
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-toggle="collapse" data-target="#colapseLamp1Off" aria-expanded="false" aria-controls="colapseLamp1Off">Timer off</button>   
+                                </div>
+                            </div>  
+                            <div class="collapse" id="colapseLamp1Off">
+                                <div class="row mt-sm-4">
+                                    <div class="col-12 col-sm-3 text-center pt-1 pt-sm-4">                                       
+                                            Timer off   
+                                    </div>
+                                    <div class="col-12 col-sm-5 mb-4 mb-sm-0">  
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                        
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp1_timer_off_down"><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center ac-timer">
+                                                <div class="row">
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp1-off-digit" type="number" min="0" max="23" value="" id="lamp1_off_hour">
+                                                    </div>
+                                                    <div class="col-4 text-center">
+                                                        <span class="text-center"> : </span>
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp1-off-digit" type="number" min="0" max="59" value="" id="lamp1_off_minutes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 text-center">  
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp1_timer_off_up"><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                            </div>
+                                        </div>                                 
+                                    </div>
+                                    <div class="col-12 col-sm-4"> 
+                                        <div class="row">     
+                                            <div class="col-4 text-center">               
+                                                <button id="set_lamp1_timer_off_1" type="button" class="btn btn-secondary btn-lg">Set</button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center"> 
+                                                <button id="set_lamp1_timer_off_0" type="button" class="btn btn-secondary btn-lg">Cancel</button>   
+                                            </div>
+                                            <div class="col-4">    
+                                            </div>
+                                        </div>         
+                                        
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="collapse" id="colapseLamp1On">
+                                <div class="row mt-sm-4">
+                                    <div class="col-12 col-sm-3 text-center pt-1 pt-sm-4">                                                  
+                                            Timer on   
+                                    </div>
+                                    <div class="col-12 col-sm-5 mb-4 mb-sm-0">  
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp1_timer_on_down"><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center ac-timer">
+                                                <div class="row">
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp1-on-digit" type="number" min="0" max="23" value="" id="lamp1_on_hour">
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <span class="text-center"> : </span>
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp1-on-digit" type="number" min="0" max="59" value="" id="lamp1_on_minutes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 text-center">  
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp1_timer_on_up"><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                            </div>
+                                        </div>                                 
+                                    </div>
+                                    <div class="col-12 col-sm-4">   
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                  
+                                                <button id="set_lamp1_timer_on_1" type="button" class="btn btn-secondary btn-lg">Set</button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center"> 
+                                                <button id="set_lamp1_timer_on_0" type="button" class="btn btn-secondary btn-lg">Cancel</button>   
+                                            </div>
+                                            <div class="col-4">    
+                                            </div>
+                                        </div>         
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mt-4">
+                                <label for="staticEmail" class="col-3 col-form-label align-self-center"><b>Ambient Lamp</b></label>
+                                <div class="col-2 align-self-center">
+                                    <input type="checkbox" {{ env_lamp }} data-toggle="toggle" data-size="large" id="main-lamp2" data-onstyle="info" data-style="ios">
+                                </div>
+                                <div class="col-2 mx-4 mx-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-toggle="collapse" data-target="#colapseLamp2On" aria-expanded="false" aria-controls="colapseLamp2On">Timer on</button>   
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-secondary btn-lg" data-toggle="collapse" data-target="#colapseLamp2Off" aria-expanded="false" aria-controls="colapseLamp2Off">Timer off</button>   
+                                </div>
+                            </div> 
+                            <div class="collapse" id="colapseLamp2Off">
+                                <div class="row mt-sm-4">
+                                    <div class="col-12 col-sm-3 text-center pt-1 pt-sm-4">                                       
+                                            Timer off   
+                                    </div>
+                                    <div class="col-12 col-sm-5 mb-4 mb-sm-0">  
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                        
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp2_timer_off_down"><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center ac-timer">
+                                                <div class="row">
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp2-off-digit" type="number" min="0" max="23" value="" id="lamp2_off_hour">
+                                                    </div>
+                                                    <div class="col-4 text-center">
+                                                        <span class="text-center"> : </span>
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp2-off-digit" type="number" min="0" max="59" value="" id="lamp2_off_minutes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 text-center">  
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp2_timer_off_up"><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                            </div>
+                                        </div>                                 
+                                    </div>
+                                    <div class="col-12 col-sm-4"> 
+                                        <div class="row">     
+                                            <div class="col-4 text-center">               
+                                                <button id="set_lamp2_timer_off_1" type="button" class="btn btn-secondary btn-lg">Set</button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center"> 
+                                                <button id="set_lamp2_timer_off_0" type="button" class="btn btn-secondary btn-lg">Cancel</button>   
+                                            </div>
+                                            <div class="col-4">    
+                                            </div>
+                                        </div>         
+                                        
+                                    </div>
+                                </div> 
+                            </div>
+                            <div class="collapse" id="colapseLamp2On">
+                                <div class="row mt-sm-4">
+                                    <div class="col-12 col-sm-3 text-center pt-1 pt-sm-4">                                                  
+                                            Timer on   
+                                    </div>
+                                    <div class="col-12 col-sm-5 mb-4 mb-sm-0">  
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp2_timer_on_down"><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center ac-timer">
+                                                <div class="row">
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp2-on-digit" type="number" min="0" max="23" value="" id="lamp2_on_hour">
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <span class="text-center"> : </span>
+                                                    </div>
+                                                    <div class="col-4 p-0 text-center">
+                                                        <input class="form-control lamp2-on-digit" type="number" min="0" max="59" value="" id="lamp2_on_minutes">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 text-center">  
+                                                <button type="button" class="btn btn-secondary btn-lg icon" id="lamp2_timer_on_up"><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                            </div>
+                                        </div>                                 
+                                    </div>
+                                    <div class="col-12 col-sm-4">   
+                                        <div class="row">     
+                                            <div class="col-4 text-center">                  
+                                                <button id="set_lamp2_timer_on_1" type="button" class="btn btn-secondary btn-lg">Set</button>  
+                                            </div>
+                                            <div class="col-4 align-self-center text-center"> 
+                                                <button id="set_lamp2_timer_on_0" type="button" class="btn btn-secondary btn-lg">Cancel</button>   
+                                            </div>
+                                            <div class="col-4">    
+                                            </div>
+                                        </div>         
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="fan" role="tabpanel" aria-labelledby="fan-tab">                  
+                        <div class="remote-group">
+                            <div class="form-group row">
+                                <label for="staticEmail" class="col-4 col-form-label align-self-center"><b>Fan</b></label>
+                                <div class="col-4 col-md-2 mx-0 mx-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node3','relay','fan','0');">Off</button>   
+                                </div>
+                                <div class="col-4 col-md-2 mx-0 mx-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node3','relay','fan','1');">Speed 1</button>   
+                                </div>
+                                <div class="col-4 d-block d-md-none mt-3">  
+                                </div>
+                                <div class="col-4 col-md-2 mt-3 mt-md-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node3','relay','fan','2');">Speed 2</button>   
+                                </div>
+                                <div class="col-4 col-md-2 mt-3 mt-md-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node3','relay','fan','3');">Speed 3</button>   
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="ac" role="tabpanel" aria-labelledby="ac-tab">
+                        <div class="remote-group w-100">
+                            <div class="row">
+                                <div class="col-12 col-sm-2 text-center">
+                                    <div class="row">
+                                        <div class="col-4 text-center">
+                                            <button type="button" class="btn btn-danger btn-lg icon" onclick="sendCommand('node1','ir','ac','ac_on');"><i class="fa fa-power-off" aria-hidden="true"></i></button>     
+                                            <span class="float-left dot2 {{ ac_state }}" id="ac_status" onclick="forceState('AC');"></span>
+                                        </div>
+                                    </div>
+                                </div>  
+                                <div class="col-12 col-sm-5 my-2 my-sm-0">
+                                    <div class="row">
+                                        <div class="col-4 text-center">
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','fan_minus');">Fan<br><i class="fa fa-sort-desc" aria-hidden="true"></i></button> 
+                                        </div>
+                                        <div class="col-4 align-self-center text-center">
+                                            <span class="ac_fan text-center" id="ac_fan"></span>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','fan_plus');">Fan<br><i class="fa fa-sort-asc" aria-hidden="true"></i></button>
+                                        </div>
+                                    </div> 
+                                </div>  
+                                <div class="col-12 col-sm-5">        
+                                    <div class="row">     
+                                        <div class="col-4 text-center">                      
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','swing_down');">Swing<br><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                        </div>
+                                        <div class="col-4 align-self-center text-center">
+                                            <span class="ac_swing text-center" id="ac_swing"></span>
+                                        </div>
+                                        <div class="col-4 text-center">  
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','swing_up');">Swing<br><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                        </div>
+                                    </div> 
+                                </div> 
+                            </div>
+                            <div class="row mt-sm-4">
+                                <div class="col-2 text-left d-none d-sm-block">
+                                </div>
+                                <div class="col-12 col-sm-5 my-2 my-sm-0">          
+                                    <div class="row">     
+                                        <div class="col-4 text-center">                      
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','temp_down');">Temp<br><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                        </div>
+                                        <div class="col-4 align-self-center text-center">
+                                            <span class="ac_fan text-center" id="ac_temp"></span>
+                                        </div>
+                                        <div class="col-4 text-center">  
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','temp_up');">Temp<br><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                        </div>
+                                    </div>                         
+                                </div>
+                                <div class="col-12 col-sm-5">          
+                                    <div class="row">    
+                                        <div class="col-4 text-center">                          
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','ac_cool');">Cool</button>    
+                                        </div>
+                                        <div class="col-4 text-center">   
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','ac_dry');">Dry</button>     
+                                        </div>
+                                        <div class="col-4 text-center">                     
+                                            <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','ac','ac_auto');">Auto</button>     
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-sm-4">
+                                <div class="col-12 col-sm-2 text-center pt-1 pt-sm-4">                                        
+                                        Timer off   
+                                </div>
+                                <div class="col-12 col-sm-5 mb-2 mb-sm-0">  
+                                    <div class="row">     
+                                        <div class="col-4 text-center">                      
+                                            <button type="button" class="btn btn-secondary btn-lg icon" id="ac_timer_off_down"><i class="fa fa-sort-desc" aria-hidden="true"></i></button>  
+                                        </div>
+                                        <div class="col-4 align-self-center text-center ac-timer">
+                                            <div class="row">
+                                                <div class="col-4 p-0 text-center">
+                                                    <input class="form-control ac-digit" type="number" min="0" max="23" value="" id="ac_off_hour">
+                                                </div>
+                                                <div class="col-4 text-center">
+                                                    <span class="text-center"> : </span>
+                                                </div>
+                                                <div class="col-4 p-0 text-center">
+                                                    <input class="form-control ac-digit" type="number" min="0" max="59" value="" id="ac_off_minutes">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4 text-center">  
+                                            <button type="button" class="btn btn-secondary btn-lg icon" id="ac_timer_off_up"><i class="fa fa-sort-asc" aria-hidden="true"></i></button>    
+                                        </div>
+                                    </div>                                 
+                                </div>
+                                <div class="col-12 col-sm-5">   
+                                    <div class="row">     
+                                        <div class="col-4 text-center">                      
+                                            <button id="set_ac_timer_off_1" type="button" class="btn btn-secondary btn-lg">Set</button>  
+                                        </div>
+                                        <div class="col-4 align-self-center text-center"> 
+                                            <button id="set_ac_timer_off_0" type="button" class="btn btn-secondary btn-lg">Cancel</button>   
+                                        </div>
+                                        <div class="col-4">    
+                                        </div>
+                                    </div>         
+                                     
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-2 text-left">
+                                </div>
+                                <div class="col-5">                          
+                                </div>
+                                <div class="col-5 text-center"> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tv" role="tabpanel" aria-labelledby="tv-tab">
+                        <div class="remote-group">
+                            <div class="row">
+                                <div class="col-4 col-sm-2">
+                                    <button type="button" class="btn btn-danger btn-lg icon" onclick="sendCommand('node1','ir','tv','tv_on');"><i class="fa fa-power-off" aria-hidden="true"></i></button>      
+                                </div>
+                                <div class="col-4 col-sm-2">               
+                                    <button type="button" class="btn btn-success btn-lg icon" onclick="sendCommand('node1','ir','tv','tv_source');"><i class="fa fa-external-link" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="col-4 col-sm-2">      
+                                    <button type="button" class="btn btn-info btn-lg icon" onclick="sendCommand('node1','ir','tv','tv_voldown');"><i class="fa fa-volume-down" aria-hidden="true"></i></button>  
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">                 
+                                    <button type="button" class="btn btn-info btn-lg icon" onclick="sendCommand('node1','ir','tv','tv_volup');"><i class="fa fa-volume-up" aria-hidden="true"></i></button> 
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">                 
+                                    <button type="button" class="btn btn-info btn-lg icon" onclick="sendCommand('node1','ir','tv','tv_mute');"><i class="fa fa-volume-off" aria-hidden="true"></i></button> 
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-12 text-center">                                     
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="speaker" role="tabpanel" aria-labelledby="speaker-tab">
+                        <div class="remote-group">
+                            <div class="row text-center">
+                                <div class="col-4 col-sm-2">
+                                    <button type="button" class="btn btn-danger btn-lg icon" onclick="sendCommand('node1','ir','speaker','spk_on');"><i class="fa fa-power-off" aria-hidden="true"></i></button>            
+                                </div>
+                                <div class="col-4 col-sm-2">                
+                                    <button type="button" class="btn btn-warning btn-lg icon" onclick="sendCommand('node1','ir','speaker','spk_mute');"><i class="fa fa-volume-off" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="col-4 col-sm-2">
+                                    <button type="button" class="btn btn-info btn-lg icon" onclick="sendCommand('node1','ir','speaker','spk_voldown');"><i class="fa fa-volume-down" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-info btn-lg  icon" onclick="sendCommand('node1','ir','speaker','spk_volup');"><i class="fa fa-volume-up" aria-hidden="true"></i></button>  
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-info btn-lg  icon" onclick="sendCommand('node1','ir','speaker','spk_trup');"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-info btn-lg  icon" onclick="sendCommand('node1','ir','speaker','spk_bassup');"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="row text-center text-center my-sm-2">
+                                <div class="col-4 col-sm-2 d-none d-sm-block">
+                                </div>
+                                <div class="col-4 col-sm-2 d-none d-sm-block">
+                                </div>
+                                <div class="col-4 col-sm-2 d-none d-sm-block">
+                                </div>
+                                <div class="col-4 col-sm-2">
+                                </div>
+                                <div class="col-4 col-sm-2 text-center">
+                                    Treble
+                                </div>
+                                <div class="col-4 col-sm-2 text-center">
+                                    Bass
+                                </div> 
+                            </div>
+                            <div class="row text-center">
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0 d-none d-sm-block">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_pc');">PC</button> 
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0 d-none d-sm-block">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_aux1');">AUX<br>1</button>  
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0 d-none d-sm-block">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_aux2');">AUX<br>2</button>
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-info btn-lg  icon" onclick="sendCommand('node1','ir','speaker','spk_trdown');"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-info btn-lg  icon" onclick="sendCommand('node1','ir','speaker','spk_bassdown');"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="row text-center d-flex d-sm-none">
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_pc');">PC</button> 
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_aux1');">AUX<br>1</button>  
+                                </div>
+                                <div class="col-4 col-sm-2 mt-2 mt-sm-0">
+                                    <button type="button" class="btn btn-secondary btn-lg" onclick="sendCommand('node1','ir','speaker','spk_aux2');">AUX<br>2</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-wrapper">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                        <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" id="lamp-tab" data-toggle="tab" href="#lamp" role="tab" aria-controls="lamp" aria-selected="false">Lamp</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="fan-tab" data-toggle="tab" href="#fan" role="tab" aria-controls="fan" aria-selected="false">Fan</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="ac-tab" data-toggle="tab" href="#ac" role="tab" aria-controls="ac" aria-selected="false">AC</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link" id="tv-tab" data-toggle="tab" href="#tv" role="tab" aria-controls="tv" aria-selected="false">TV</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link d-block d-md-none" id="speaker-tab" data-toggle="tab" href="#speaker" role="tab" aria-controls="speaker" aria-selected="false">Spk</a>
+                        <a class="nav-link d-none d-md-block " id="speaker-tab" data-toggle="tab" href="#speaker" role="tab" aria-controls="speaker" aria-selected="false">Speaker</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="http://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        //fungsi untuk mengload weather widget pada home
+        !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+        
+        $( document ).ready(function() {
+            //mengecek apakah tipe adalah full, jika full maka nyalakan particle js , jika lite abaikan
+            if($('#type').val() == 'full'){
+                particlesJS.load("particles-js", "{{ url_for('static', filename='particlesjs-config.json') }}", function() {
+                    console.log('callback - particles.js config loaded');
+                });
+            }
+
+            //set interval / timer selama 1 menit untuk menarik value dari backend
+            setInterval(function() {
+                console.log('refresh');
+                getState();
+            }, 60 * 1000);
+
+            //panggil fungsi jam
+            currentTime();
+            //panggil fungsi untuk mengabil configurasi sekarang dari backend
+            getState();
+
+            $(function() {
+                //ketika toogle main lamp di tekan
+                $('#main-lamp').change(function() {
+                    console.log($(this).prop('checked'));
+                    //jika toogle checked
+                    if($(this).prop('checked') == true){
+                        console.log('main-lamp on');
+                        //kirim command nyalakan lampu
+                        sendCommand('node2','relay','lamp','ON');
+                    //jika toogle tidak checked atau false
+                    }else if($(this).prop('checked') == false){
+                        //kirim command untuk matikan lampu
+                        sendCommand('node2','relay','lamp','OFF');
+                        console.log('main-lamp off');
+                    }
+                })
+                //ketika toogle ambilent lamp di tekan
+                $('#main-lamp2').change(function() {
+                    console.log($(this).prop('checked'));
+                    if($(this).prop('checked') == true){
+                        console.log('env-lamp on');
+                        sendCommand('node4','relay','lamp2','ON');
+                    }else if($(this).prop('checked') == false){
+                        sendCommand('node4','relay','lamp2','OFF');
+                        console.log('env-lamp off');
+                    }
+                })
+
+                //ketika tombol timer off main lamp UP ditekan
+                $('#lamp1_timer_off_up').click(function() {
+                    //ambil value timer dan simpan pada variable
+                    lamp1_off_hour = parseInt($('#lamp1_off_hour').val());
+                    lamp1_off_minutes = parseInt($('#lamp1_off_minutes').val());
+
+                    //lakukan conditional
+                    //jika menit == 59 dan jam == 23
+                    if((lamp1_off_minutes == 59) && (lamp1_off_hour == 23)){
+                        //setel jam dan menit jadi 0
+                        lamp1_off_hour = 0;
+                        lamp1_off_minutes = 0;
+                    //jika menit == 59
+                    }else if(ac_off_minutes == 59){
+                        //setel jam tambah 1 dan menit jadi 0
+                        lamp1_off_hour += 1;
+                        lamp1_off_minutes = 0;
+                    //lainnya 
+                    }else{
+                        //menit tambah 1
+                        lamp1_off_minutes += 1;
+                    }
+                    
+                    //tampilkan menit dan jam pada element dom
+                    $('#lamp1_off_hour').val(lamp1_off_hour);
+                    $('#lamp1_off_minutes').val(lamp1_off_minutes);
+                })
+
+                $('#lamp1_timer_off_down').click(function() {
+                    lamp1_off_hour = parseInt($('#lamp1_off_hour').val());
+                    lamp1_off_minutes = parseInt($('#lamp1_off_minutes').val());
+
+                    if((lamp1_off_minutes == 0) && (lamp1_off_hour != 0)){
+                        lamp1_off_hour -= 1;
+                        lamp1_off_minutes = 59;
+                    }else if((lamp1_off_minutes == 0) && (lamp1_off_hour == 0)){
+                        lamp1_off_hour = 23;
+                        lamp1_off_minutes = 59;
+                    }else{
+                        lamp1_off_minutes -= 1;
+                    }
+
+                    $('#lamp1_off_hour').val(lamp1_off_hour);
+                    $('#lamp1_off_minutes').val(lamp1_off_minutes);
+                })
+
+                //ketika timer off main lamp di set / diaktifkan
+                $('#set_lamp1_timer_off_1').click(function() {
+                    //tarik value menit dan jam
+                    lamp1_off_hour = parseInt($('#lamp1_off_hour').val());
+                    lamp1_off_minutes = parseInt($('#lamp1_off_minutes').val());
+
+                    temp = lamp1_off_hour + ':' + lamp1_off_minutes
+                    //kirim command ke back end untuk mengaktifkan timer dan setel waktunya
+                    sendCommand('node2','lamp1_timer_off','1',temp)
+                })
+
+                //ketika timer off main lamp di cancel / dimatikan
+                $('#set_lamp1_timer_off_0').click(function() {
+                    //tarik value menit dan jam
+                    lamp1_off_hour = parseInt($('#lamp1_off_hour').val());
+                    lamp1_off_minutes = parseInt($('#lamp1_off_minutes').val());
+
+                    temp = lamp1_off_hour + ':' + lamp1_off_minutes
+                    //kirim command ke backend untuk mematikan timer dan stel waktunya
+                    sendCommand('node2','lamp1_timer_off','0',temp)
+                })
+
+                //lamp on timer
+                $('#lamp1_timer_on_up').click(function() {
+                    lamp1_on_hour = parseInt($('#lamp1_on_hour').val());
+                    lamp1_on_minutes = parseInt($('#lamp1_on_minutes').val());
+
+                    if((lamp1_on_minutes == 59) && (lamp1_on_hour == 23)){
+                        lamp1_on_hour = 0;
+                        lamp1_on_minutes = 0;
+                    }else if(ac_off_minutes == 59){
+                        lamp1_on_hour += 1;
+                        lamp1_on_minutes = 0;
+                    }else{
+                        lamp1_on_minutes += 1;
+                    }
+                    
+                    $('#lamp1_on_hour').val(lamp1_on_hour);
+                    $('#lamp1_on_minutes').val(lamp1_on_minutes);
+                })
+
+                $('#lamp1_timer_on_down').click(function() {
+                    lamp1_on_hour = parseInt($('#lamp1_on_hour').val());
+                    lamp1_on_minutes = parseInt($('#lamp1_on_minutes').val());
+
+                    if((lamp1_on_minutes == 0) && (lamp1_on_hour != 0)){
+                        lamp1_on_hour -= 1;
+                        lamp1_on_minutes = 59;
+                    }else if((lamp1_on_minutes == 0) && (lamp1_on_hour == 0)){
+                        lamp1_on_hour = 23;
+                        lamp1_on_minutes = 59;
+                    }else{
+                        lamp1_on_minutes -= 1;
+                    }
+
+                    $('#lamp1_on_hour').val(lamp1_on_hour);
+                    $('#lamp1_on_minutes').val(lamp1_on_minutes);
+                })
+
+                $('#set_lamp1_timer_on_1').click(function() {
+                    lamp1_on_hour = parseInt($('#lamp1_on_hour').val());
+                    lamp1_on_minutes = parseInt($('#lamp1_on_minutes').val());
+
+                    temp = lamp1_on_hour + ':' + lamp1_on_minutes
+                    sendCommand('node2','lamp1_timer_on','1',temp)
+                })
+
+                $('#set_lamp1_timer_on_0').click(function() {
+                    lamp1_on_hour = parseInt($('#lamp1_on_hour').val());
+                    lamp1_on_minutes = parseInt($('#lamp1_on_minutes').val());
+
+                    temp = lamp1_on_hour + ':' + lamp1_on_minutes
+                    sendCommand('node2','lamp1_timer_on','0',temp)
+                })
+
+                //lamp2 off timer
+                $('#lamp2_timer_off_up').click(function() {
+                    lamp2_off_hour = parseInt($('#lamp2_off_hour').val());
+                    lamp2_off_minutes = parseInt($('#lamp2_off_minutes').val());
+
+                    if((lamp2_off_minutes == 59) && (lamp2_off_hour == 23)){
+                        lamp2_off_hour = 0;
+                        lamp2_off_minutes = 0;
+                    }else if(ac_off_minutes == 59){
+                        lamp2_off_hour += 1;
+                        lamp2_off_minutes = 0;
+                    }else{
+                        lamp2_off_minutes += 1;
+                    }
+                    
+                    $('#lamp2_off_hour').val(lamp2_off_hour);
+                    $('#lamp2_off_minutes').val(lamp2_off_minutes);
+                })
+
+                $('#lamp2_timer_off_down').click(function() {
+                    lamp2_off_hour = parseInt($('#lamp2_off_hour').val());
+                    lamp2_off_minutes = parseInt($('#lamp2_off_minutes').val());
+
+                    if((lamp2_off_minutes == 0) && (lamp2_off_hour != 0)){
+                        lamp2_off_hour -= 1;
+                        lamp2_off_minutes = 59;
+                    }else if((lamp2_off_minutes == 0) && (lamp2_off_hour == 0)){
+                        lamp2_off_hour = 23;
+                        lamp2_off_minutes = 59;
+                    }else{
+                        lamp2_off_minutes -= 1;
+                    }
+
+                    $('#lamp2_off_hour').val(lamp2_off_hour);
+                    $('#lamp2_off_minutes').val(lamp2_off_minutes);
+                })
+
+                $('#set_lamp2_timer_off_1').click(function() {
+                    lamp2_off_hour = parseInt($('#lamp2_off_hour').val());
+                    lamp2_off_minutes = parseInt($('#lamp2_off_minutes').val());
+
+                    temp = lamp2_off_hour + ':' + lamp2_off_minutes
+                    sendCommand('node2','lamp2_timer_off','1',temp)
+                })
+
+                $('#set_lamp2_timer_off_0').click(function() {
+                    lamp2_off_hour = parseInt($('#lamp2_off_hour').val());
+                    lamp2_off_minutes = parseInt($('#lamp2_off_minutes').val());
+
+                    temp = lamp2_off_hour + ':' + lamp2_off_minutes
+                    sendCommand('node2','lamp2_timer_off','0',temp)
+                })
+
+                //lamp2 on timer
+                $('#lamp2_timer_on_up').click(function() {
+                    lamp2_on_hour = parseInt($('#lamp2_on_hour').val());
+                    lamp2_on_minutes = parseInt($('#lamp2_on_minutes').val());
+
+                    if((lamp2_on_minutes == 59) && (lamp2_on_hour == 23)){
+                        lamp2_on_hour = 0;
+                        lamp2_on_minutes = 0;
+                    }else if(ac_off_minutes == 59){
+                        lamp2_on_hour += 1;
+                        lamp2_on_minutes = 0;
+                    }else{
+                        lamp2_on_minutes += 1;
+                    }
+                    
+                    $('#lamp2_on_hour').val(lamp2_on_hour);
+                    $('#lamp2_on_minutes').val(lamp2_on_minutes);
+                })
+
+                $('#lamp2_timer_on_down').click(function() {
+                    lamp2_on_hour = parseInt($('#lamp2_on_hour').val());
+                    lamp2_on_minutes = parseInt($('#lamp2_on_minutes').val());
+
+                    if((lamp2_on_minutes == 0) && (lamp2_on_hour != 0)){
+                        lamp2_on_hour -= 1;
+                        lamp2_on_minutes = 59;
+                    }else if((lamp2_on_minutes == 0) && (lamp2_on_hour == 0)){
+                        lamp2_on_hour = 23;
+                        lamp2_on_minutes = 59;
+                    }else{
+                        lamp2_on_minutes -= 1;
+                    }
+
+                    $('#lamp2_on_hour').val(lamp2_on_hour);
+                    $('#lamp2_on_minutes').val(lamp2_on_minutes);
+                })
+
+                $('#set_lamp2_timer_on_1').click(function() {
+                    lamp2_on_hour = parseInt($('#lamp2_on_hour').val());
+                    lamp2_on_minutes = parseInt($('#lamp2_on_minutes').val());
+
+                    temp = lamp2_on_hour + ':' + lamp2_on_minutes
+                    sendCommand('node2','lamp2_timer_on','1',temp)
+                })
+
+                $('#set_lamp2_timer_on_0').click(function() {
+                    lamp2_on_hour = parseInt($('#lamp2_on_hour').val());
+                    lamp2_on_minutes = parseInt($('#lamp2_on_minutes').val());
+
+                    temp = lamp2_on_hour + ':' + lamp2_on_minutes
+                    sendCommand('node2','lamp2_timer_on','0',temp)
+                })
+
+                //ac off timer
+                $('#ac_timer_off_up').click(function() {
+                    ac_off_hour = parseInt($('#ac_off_hour').val());
+                    ac_off_minutes = parseInt($('#ac_off_minutes').val());
+
+                    if((ac_off_minutes == 59) && (ac_off_hour == 23)){
+                        ac_off_hour = 0;
+                        ac_off_minutes = 0;
+                    }else if(ac_off_minutes == 59){
+                        ac_off_hour += 1;
+                        ac_off_minutes = 0;
+                    }else{
+                        ac_off_minutes += 1;
+                    }
+                    
+                    $('#ac_off_hour').val(ac_off_hour);
+                    $('#ac_off_minutes').val(ac_off_minutes);
+                })
+
+                $('#ac_timer_off_down').click(function() {
+                    ac_off_hour = parseInt($('#ac_off_hour').val());
+                    ac_off_minutes = parseInt($('#ac_off_minutes').val());
+
+                    if((ac_off_minutes == 0) && (ac_off_hour != 0)){
+                        ac_off_hour -= 1;
+                        ac_off_minutes = 59;
+                    }else if((ac_off_minutes == 0) && (ac_off_hour == 0)){
+                        ac_off_hour = 23;
+                        ac_off_minutes = 59;
+                    }else{
+                        ac_off_minutes -= 1;
+                    }
+
+                    $('#ac_off_hour').val(ac_off_hour);
+                    $('#ac_off_minutes').val(ac_off_minutes);
+                })
+
+                $('#set_ac_timer_off_1').click(function() {
+                    ac_off_hour = parseInt($('#ac_off_hour').val());
+                    ac_off_minutes = parseInt($('#ac_off_minutes').val());
+
+                    temp = ac_off_hour + ':' + ac_off_minutes
+                    sendCommand('node1','ac_timer_off','1',temp)
+                })
+
+                $('#set_ac_timer_off_0').click(function() {
+                    ac_off_hour = parseInt($('#ac_off_hour').val());
+                    ac_off_minutes = parseInt($('#ac_off_minutes').val());
+
+                    temp = ac_off_hour + ':' + ac_off_minutes
+                    sendCommand('node1','ac_timer_off','0',temp)
+                })
+            })
+        });
+
+        //fungsi untuk aktifkan fullscreen
+        //percobaan
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen(); 
+                }
+            }
+        }
+
+        //fungsi untuk memaksakan status ac dengan request ajax ke backend
+        function forceState(Fun){            
+            $('#status').css('background-color', 'aqua');
+            $.ajax({
+                url: '/force-state', 
+                type: 'post',
+                data: {fun: Fun},
+                success: function(result){
+                    result = JSON.parse(result);
+                    console.log(result);
+
+                    if(Fun == 'AC'){
+                        setAcDom(result);
+
+
+                        setTimeout(function () {
+                            $('#status').css('background-color', 'white');
+                        }, 700);
+                    }
+                },
+                error: function(){
+                    $('#status').css('background-color', 'red');
+                }
+            });
+        }
+
+        //fungsi untuk mengambil configurasi terkini dari backend menggunakan ajax
+        function getState(){            
+            $('#status').css('background-color', 'aqua');
+            $.ajax({
+                url: '/get-state', 
+                type: 'post',
+                success: function(result){
+                    console.log(result);
+                    result = JSON.parse(result);
+
+                    
+                    setAcDom(result);
+
+                    setTimeout(function () {
+                        $('#status').css('background-color', 'white');
+                    }, 700);
+
+                },
+                error: function(){
+                    $('#status').css('background-color', 'red');
+                }
+            });
+        }
+
+        //fungsi untuk mengirimkan command ke backend dengan menggunakan ajax
+        function sendCommand(Node,Fun,Mc,Cm){            
+            $('#status').css('background-color', 'aqua');
+            $.ajax({
+                url: '/', 
+                type: 'post',
+                data: {node: Node, fun: Fun, mc: Mc, cm: Cm},
+                success: function(result){                 
+
+                    console.log(result);
+                    result = JSON.parse(result);
+                    /* if(Mc == 'ac'){
+
+                        setAcDom(result);
+                    } */
+                    getState();
+
+                    setTimeout(function () {
+                        $('#status').css('background-color', 'white');
+                    }, 700);
+
+                },
+                error: function(){
+                    $('#status').css('background-color', 'red');
+                }
+            });
+        }
+    
+        //set konfigurasi yang didapatkan ke view atau DOM
+        function setAcDom(state){
+            
+            ac_fan = '';
+            if(state.ac_fan != 4){
+                for (i = 0; i < state.ac_fan; i++) {
+                    ac_fan += '|';
+                }
+            }else{
+                ac_fan = 'Auto';
+            }
+            $('#ac_fan').html(ac_fan);
+
+            ac_swing = '';
+            if(state.ac_swing == 1){
+                ac_swing = 'Lowest';
+            }else if(state.ac_swing == 2){
+                ac_swing = 'Low';
+            }else if(state.ac_swing == 3){
+                ac_swing = 'Middle';
+            }else if(state.ac_swing == 4){
+                ac_swing = 'High';
+            }else if(state.ac_swing == 5){
+                ac_swing = 'Highest';
+            }else if(state.ac_swing == 6){
+                ac_swing = 'Auto';
+            }                       
+            $('#ac_swing').html(ac_swing);
+                
+            $('#ac_temp').html(state.ac_temp);
+            
+            if(state.ac_state == 'on'){
+                $('#ac_status').removeClass('off');
+                $('#ac_status').addClass('on');
+            }else if(state.ac_state == 'off'){
+                $('#ac_status').removeClass('on');
+                $('#ac_status').addClass('off');
+            }
+
+            if(state.ac_timer_off_state == '1'){
+                $('.ac-digit').css('color','#1fbd00');
+            }else if(state.ac_timer_off_state == '0'){
+                $('.ac-digit').css('color','black');
+            }
+
+            tempTimer = state.ac_timer_off.split(':');
+            
+            $('#ac_off_hour').val(tempTimer[0]);
+            $('#ac_off_minutes').val(tempTimer[1]);
+
+
+            //timer off lamp1
+            if(state.lamp1_off_state == '1'){
+                $('.lamp1-off-digit').css('color','#1fbd00');
+            }else if(state.lamp1_off_state == '0'){
+                $('.lamp1-off-digit').css('color','black');
+            }
+
+            tempTimer = state.lamp1_off.split(':');
+            
+            $('#lamp1_off_hour').val(tempTimer[0]);
+            $('#lamp1_off_minutes').val(tempTimer[1]);
+
+            //timer on lamp1
+            if(state.lamp1_on_state == '1'){
+                $('.lamp1-on-digit').css('color','#1fbd00');
+            }else if(state.lamp1_on_state == '0'){
+                $('.lamp1-on-digit').css('color','black');
+            }
+
+            tempTimer = state.lamp1_on.split(':');
+            
+            $('#lamp1_on_hour').val(tempTimer[0]);
+            $('#lamp1_on_minutes').val(tempTimer[1]);
+
+            //timer off lamp2
+            if(state.lamp2_off_state == '1'){
+                $('.lamp2-off-digit').css('color','#1fbd00');
+            }else if(state.lamp2_off_state == '0'){
+                $('.lamp2-off-digit').css('color','black');
+            }
+
+            tempTimer = state.lamp2_off.split(':');
+            
+            $('#lamp2_off_hour').val(tempTimer[0]);
+            $('#lamp2_off_minutes').val(tempTimer[1]);
+
+            //timer on lamp2
+            if(state.lamp2_on_state == '1'){
+                $('.lamp2-on-digit').css('color','#1fbd00');
+            }else if(state.lamp2_on_state == '0'){
+                $('.lamp2-on-digit').css('color','black');
+            }
+
+            tempTimer = state.lamp2_on.split(':');
+            
+            $('#lamp2_on_hour').val(tempTimer[0]);
+            $('#lamp2_on_minutes').val(tempTimer[1]);
+        }
+    
+        //fungsi untuk menampilkan jam pada home
+        function currentTime() {
+            var d = new Date(); /* creating object of Date class */
+            var hour = d.getHours();
+            var min = d.getMinutes();
+            var sec = d.getSeconds();
+            var midday = "AM";
+
+            var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            var day = d.getDay();
+            var date = d.getDate();
+            var month = d.getMonth();
+
+            var year = d.getFullYear();
+
+            midday = (hour >= 12) ? "PM" : "AM"; /* assigning AM/PM */
+            hour = (hour == 0) ? 12 : ((hour > 12) ? (hour - 12): hour); /* assigning hour in 12-hour format */
+            hour = updateTime(hour);
+            min = updateTime(min);
+            sec = updateTime(sec);
+            document.getElementById("clock").innerText = hour + " : " + min + " : " + sec + " " + midday; /* adding time to the div */
+            document.getElementById("date").innerText = days[day] + ", " + date + " / " + month + " / " + year; /* adding time to the div */
+            var t = setTimeout(currentTime, 1000); /* setting timer */
+        }
+
+        function updateTime(k) { /* appending 0 before time elements if less than 10 */
+            if (k < 10) {
+                return "0" + k;
+            }
+            else {
+                return k;
+            }
+        }
+    </script>
+</html> 
